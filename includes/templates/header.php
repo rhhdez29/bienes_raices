@@ -4,7 +4,7 @@
     if ($trimmed === '') {
         $depth = 0;
     } else {
-        $depth = substr_count($trimmed, '/');
+        $depth = substr_count($trimmed, '/') + 1;
     }
     $basePath = str_repeat('../', $depth);
 ?>
