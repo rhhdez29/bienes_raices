@@ -3,5 +3,5 @@
 require 'app.php';
 
 function incluirTemplate( string $nombre, bool $inicio = false ){
-    include TEMPLATES_URL . "/${nombre}.php"; 
+    include __DIR__ . "/templates/${nombre}.php"; 
 }
