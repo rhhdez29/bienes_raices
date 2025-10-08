@@ -85,15 +85,31 @@
 
         //Revisar que el array este vacio
         if(empty($errores)){
+
+            //Subida de archivos
+            //Crear carpeta
+            $carpetaImagenes = '../../imagenes/';
+
+            if(!is_dir($carpetaImagenes)){
+                mkdir($carpetaImagenes);
+            }
+            
+            //Generar un nombre unico
+            $nombreImagen = md5( uniqid( rand(), true ) ) . ".jpg";
+
+            //Subir imagen
+            move_uploaded_file($imagen['tmp_name'], $carpetaImagenes . $nombreImagen );
+
+
             //Insertar en la base de datos (usar nombres de columna correctos)
             $valVendedor = ($vendedor === null) ? 'NULL' : intval($vendedor);
-            $query = "INSERT INTO propiedades (titulo, precio, descripcion, habitaciones, wc, estacionamiento, creado, vendedores_id) VALUES ('{$titulo}', {$precio}, '{$descripcion}', {$habitaciones}, {$wc}, {$estacionamiento}, '{$creado}', {$valVendedor})";
+            $query = "INSERT INTO propiedades (titulo, precio, imagen, descripcion, habitaciones, wc, estacionamiento, creado, vendedores_id) VALUES ('{$titulo}', {$precio}, '{$nombreImagen}','{$descripcion}', {$habitaciones}, {$wc}, {$estacionamiento}, '{$creado}', {$valVendedor})";
 
             $resultadoInsert = mysqli_query($db, $query);
 
             if($resultadoInsert){
                 //Redireccionar al usuario
-                header('Location: /admin');
+                header('Location: /admin?resultado=1');
                 exit;
             }
         }
