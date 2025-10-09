@@ -1,4 +1,13 @@
 <?php
+
+
+    if(!isset($inicio)) {
+        session_start();
+    }
+    
+    $auth = $_SESSION['login'] ?? false;
+
+
     $currentDir = dirname($_SERVER['SCRIPT_NAME']);
     $trimmed = trim($currentDir, '/');
     if ($trimmed === '') {
@@ -35,6 +44,9 @@
                     <a href="<?php echo $basePath; ?>anuncios.php">Anuncios</a>
                     <a href="<?php echo $basePath; ?>blog.php">Blog</a>
                     <a href="<?php echo $basePath; ?>contacto.php">Contacto</a>
+                    <?php if($auth): ?>
+                        <a href="<?php echo $basePath; ?>cerrar-sesion.php">Cerrar Sesión</a>
+                    <?php endif; ?>
                 </nav>
             </div>
         </div>
