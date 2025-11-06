@@ -1,31 +1,32 @@
-<?php 
-    
-    $id = $_GET['id'];
+<?php
+    // Incluir utilidades y configuración
+    require_once 'includes/funciones.php';
+    require_once 'includes/config/database.php';
+
+    $db = conectarDB();
+
+    // Validar el id recibido por GET
+    $id = $_GET['id'] ?? null;
     $id = filter_var($id, FILTER_VALIDATE_INT);
 
     if(!$id) {
-        header('Location: /bienes_raices/');
+        header('Location: ' . SITE_URL . '/');
+        exit;
     }
 
-    //importar la conexion
-    require __DIR__ . '/../config/database.php';
-    $db = conectarDB();
-
-    //consultar
+    // Consultar la propiedad
     $query = "SELECT * FROM propiedades WHERE id = ${id}";
-    
-    //obtener resultados
     $resultado = mysqli_query($db, $query);
 
-    if(!$resultado->num_rows) {
-        header('Location: /bienes_raices/');
+    if(!$resultado || mysqli_num_rows($resultado) === 0) {
+        // Si la consulta falla o no existe la propiedad, redirigir al inicio
+        header('Location: ' . SITE_URL . '/');
+        exit;
     }
 
     $propiedad = mysqli_fetch_assoc($resultado);
 
-    require 'includes/config/database.php';
-    incluirTemplate('header'); 
-    
+    incluirTemplate('header');
 ?>
     
     <main class="contenedor seccion contenido-centrado">

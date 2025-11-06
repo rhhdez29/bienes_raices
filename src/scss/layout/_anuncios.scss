@@ -8,13 +8,59 @@
     background-color: lighten($gris, 5);
     border: 1px solid darken($gris, 10);
     margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 70rem;
+    
+    picture {
+        flex: 0 0 30rem;
+        img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+        }
+    }
     
     .contenido-anuncio{
         padding: 2rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
-    p,h3{
+    h3 {
         margin: 0;
+        font-size: 2.4rem;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        margin: 0;
+        margin-bottom: 1rem;
+        &.descripcion {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 4;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+    }
+
+    .precio {
+        margin-top: auto;
+        margin-bottom: 2rem;
+    }
+
+    .iconos-caracteristicas {
+        margin-bottom: 2rem;
+    }
+
+    .boton-amarillo-block {
+        margin-top: auto;
+        width: 100%;
+        display: block;
     }
 }
 

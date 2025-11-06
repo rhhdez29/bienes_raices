@@ -3,8 +3,10 @@
     require __DIR__ . '/../config/database.php';
     $db = conectarDB();
 
-    //consultar
-    $query = "SELECT * FROM propiedades LIMIT $(limite)";
+    // consultar: usar $limite pasada por la página que incluye este template (por ejemplo index.php)
+    // si no viene, usar 3 por defecto
+    $limite = isset($limite) ? intval($limite) : 3;
+    $query = "SELECT * FROM propiedades LIMIT $limite";
     
     //obtener resultados
     $resultado = mysqli_query($db, $query);
@@ -17,63 +19,40 @@
 
     <div class="anuncio">
         <picture>
-            <img loading="lazy" src="/imagenes/<?php echo $propiedad['imagen']; ?>" alt="anuncio">
+            <?php
+                // Ruta real esperada donde se guardan las imágenes subidas por admin
+                $rutaImagen = __DIR__ . '/../../imagenes/' . $propiedad['imagen'];
+                $urlImagen = '/imagenes/' . $propiedad['imagen'];
+
+                // Si no existe la imagen subida, usar una imagen por defecto del build
+                if(!file_exists($rutaImagen) || empty($propiedad['imagen'])){
+                    $urlImagen = 'build/img/destacada.jpg';
+                }
+            ?>
+            <img loading="lazy" src="<?php echo $urlImagen; ?>" alt="anuncio">
         </picture>
 
         <div class="contenido-anuncio">
-            <h3><?php echo $propiedad['titulo']; ?></h3>
-            <p><?php echo $propiedad['descripcion']; ?></p>
-            <p class="precio"><?php echo $propiedad['precio']; ?></p>
+            <h3><?php echo htmlspecialchars($propiedad['titulo']); ?></h3>
+            <p class="descripcion"><?php echo htmlspecialchars($propiedad['descripcion']); ?></p>
+            <p class="precio">$<?php echo number_format(htmlspecialchars($propiedad['precio'])); ?></p>
             
             <ul class="iconos-caracteristicas">
                 <li>
                     <img class="icono" loading="lazy" src="build/img/icono_wc.svg" alt="icono wc">
-                    <p><?php echo $propiedad['wc']; ?></p>
+                    <p><?php echo htmlspecialchars($propiedad['wc']); ?></p>
                 </li>
                 <li>
                     <img class="icono" loading="lazy" src="build/img/icono_estacionamiento.svg" alt="icono estacionamiento">
-                    <p><?php echo $propiedad['estacionamiento']; ?></p>
+                    <p><?php echo htmlspecialchars($propiedad['estacionamiento']); ?></p>
                 </li>
                 <li>
                     <img class="icono" loading="lazy" src="build/img/icono_dormitorio.svg" alt="icono habitaciones">
-                    <p><?php echo $propiedad['habitaciones']; ?></p>
+                    <p><?php echo htmlspecialchars($propiedad['habitaciones']); ?></p>
                 </li>
             </ul>
                         
-            <a href="anuncio.php" class="boton-amarillo-block">
-                Ver Propiedad
-            </a>
-        </div> <!--contenido-anuncio-->
-    </div> <!--anuncio-->
-
-    <div class="anuncio">
-        <picture>
-            <source srcset="build/img/anuncio3.webp" type="img/webp">
-            <source srcset="build/img/anuncio3.jpg" type="img/jpg">
-            <img loading="lazy" src="build/img/anuncio3.jpg" alt="anuncio">
-        </picture>
-
-        <div class="contenido-anuncio">
-            <h3>Casa con alberca</h3>
-            <p>Casa en el lago con excelente vista, acabados de lujo a un excelente precio</p>
-            <p class="precio">$3,000,000</p>
-            
-            <ul class="iconos-caracteristicas">
-                <li>
-                    <img class="icono" loading="lazy" src="build/img/icono_wc.svg" alt="icono wc">
-                    <p>3</p>
-                </li>
-                <li>
-                    <img class="icono" loading="lazy" src="build/img/icono_estacionamiento.svg" alt="icono estacionamiento">
-                    <p>3</p>
-                </li>
-                <li>
-                    <img class="icono" loading="lazy" src="build/img/icono_dormitorio.svg" alt="icono habitaciones">
-                    <p>4</p>
-                </li>
-            </ul>
-            
-            <a href="anuncio.php?id=<?php echo $propiedad['id']; ?>" class="boton-amarillo-block">
+            <a href="/anuncio.php?id=<?php echo urlencode($propiedad['id']); ?>" class="boton-amarillo-block">
                 Ver Propiedad
             </a>
         </div> <!--contenido-anuncio-->

@@ -1,10 +1,10 @@
 <?php 
 
-    require '../../includes/funciones.php';
+    require_once '../../includes/funciones.php';
 
     $auth = estaAutenticado();
     if(!$auth) {
-        header('Location: /bienes_raices/login.php');
+        header('Location: ' . SITE_URL . '/login.php');
     }
     
     //Base de datos
@@ -49,7 +49,7 @@
     $creado = date('Y-m-d');
 
     //Asignar files hacia una variable
-    $imagen = $_FILES['imagen'];
+    $imagen = $_FILES['imagen'] ?? null;
 
         if(!$titulo){
             $errores[] = "Debes añadir un título";
@@ -75,15 +75,22 @@
             $errores[] = "Elige un vendedor";
         }
 
-        if(!$imagen['name'] || !$imagen['error']){
+        // Validar imagen
+        if(!$imagen || empty($imagen['name']) || $imagen['error'] !== 0){
             $errores[] = "La imagen es obligatoria";
-        }
+        } else {
+            //Validar por tamaño (100 KB máximo)
+            $medida = 1000 * 100; // 100000 bytes
+            if(isset($imagen['size']) && $imagen['size'] > $medida){
+                $errores[] = "La imagen es muy pesada";
+            }
 
-        //Validar por tamaño (100 Kb máximo)
-        $medida = 1000 * 100;
-
-        if($imagen['size' > $medida] = ){
-            $errores[] = "La imagen es muy pesada";
+            // Validar tipo mime (solo jpeg/png)
+            $info = getimagesize($imagen['tmp_name']);
+            $mime = $info['mime'] ?? '';
+            if(!in_array($mime, ['image/jpeg','image/png'])){
+                $errores[] = "El formato de la imagen no es válido (solo JPG/PNG)";
+            }
         }
 
         //echo "<pre>";
@@ -94,18 +101,22 @@
         if(empty($errores)){
 
             //Subida de archivos
-            //Crear carpeta
-            $carpetaImagenes = '../../imagenes/';
+            //Crear carpeta (ruta absoluta relativa al archivo)
+            $carpetaImagenes = __DIR__ . '/../../imagenes/';
 
             if(!is_dir($carpetaImagenes)){
-                mkdir($carpetaImagenes);
+                mkdir($carpetaImagenes, 0755, true);
             }
-            
-            //Generar un nombre unico
-            $nombreImagen = md5( uniqid( rand(), true ) ) . ".jpg";
+
+            //Generar un nombre unico conservando la extensión
+            $extension = ($mime === 'image/png') ? '.png' : '.jpg';
+            $nombreImagen = md5( uniqid( rand(), true ) ) . $extension;
 
             //Subir imagen
-            move_uploaded_file($imagen['tmp_name'], $carpetaImagenes . $nombreImagen );
+            $rutaDestino = $carpetaImagenes . $nombreImagen;
+            if(!move_uploaded_file($imagen['tmp_name'], $rutaDestino)){
+                $errores[] = "No se pudo subir la imagen";
+            }
 
 
             //Insertar en la base de datos (usar nombres de columna correctos)
@@ -139,7 +150,7 @@
         </div>
         <?php endforeach; ?>
 
-        <form class="formulario" method="POST" action="/admin/propiedades/crear.php" enctype="mulipart/form-data">
+    <form class="formulario" method="POST" action="/admin/propiedades/crear.php" enctype="multipart/form-data">
             <fieldset>
                 <legend>Información General</legend>
 
@@ -176,7 +187,7 @@
                     <option value="">---Seleccione---</option>
                     <?php if($resultado): ?>
                         <?php while($vendedorDB = mysqli_fetch_assoc($resultado)): ?>
-                            <option <?php $vendedorId === $vendedor['Id'] ? 'select' : ''?>   value="<?php echo htmlspecialchars($vendedorDB['id']); ?>" <?php echo ($vendedor == $vendedorDB['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($vendedorDB['nombre'] . ' ' . ($vendedorDB['apellido'] ?? '')); ?></option>
+                        <option value="<?php echo htmlspecialchars($vendedorDB['id']); ?>" <?php echo ($vendedor == $vendedorDB['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($vendedorDB['nombre'] . ' ' . ($vendedorDB['apellido'] ?? '')); ?></option>
                         <?php endwhile; ?>
                     <?php endif; ?>
                 </select>

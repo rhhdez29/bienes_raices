@@ -1,11 +1,20 @@
 <?php 
     
+    require_once 'includes/funciones.php';
     require 'includes/config/database.php';
     $db = conectarDB();
 
+    // Iniciar sesión
+    session_start();
+    
+    // Si el usuario ya está autenticado, redirigir al admin
+    if(isset($_SESSION['login']) && $_SESSION['login']) {
+        header('Location: /admin');
+        exit;
+    }
+
     $errores = [];
     
-
     //Autenticar el usuario
     if($_SERVER['REQUEST_METHOD'] === 'POST') {
         // echo "<pre>";
@@ -29,8 +38,14 @@
         if(empty($errores)) {
             //Consultar si el usuario existe
             $db = conectarDB();
-            $query = "SELECT * FROM usuarios WHERE email = '${email}';";
+            // Escapar el email para prevenir SQL injection
+            $email = mysqli_real_escape_string($db, $email);
+            $query = "SELECT * FROM usuarios WHERE email = '${email}'";
             $resultado = mysqli_query($db, $query);
+            
+            if (!$resultado) {
+                $errores[] = "Error al consultar la base de datos: " . mysqli_error($db);
+            }
 
             if($resultado->num_rows) {
                 //Revisar si el password es correcto
@@ -47,7 +62,9 @@
                     $_SESSION['usuario'] = $usuario['email'];
                     $_SESSION['login'] = true;
 
-                    header('Location: /bienes_raices/admin/index.php');
+                    // Redirigir al admin
+                    header('Location: /admin');
+                    exit;
 
                 } else {
                     $errores[] = "El password es incorrecto";
@@ -58,10 +75,9 @@
             }
         }
     }
-    require 'includes/funciones.php';
+    require_once 'includes/funciones.php';
 
     //Incluye el header
-    require 'includes/funciones.php';
     incluirTemplate('header'); 
     
 ?>
@@ -74,10 +90,10 @@
                 <legend>Email y Password</legend>
 
                 <label for="email">Email</label>
-                <input type="email" name="email" placeholder="Tu Email" id="email" require>
+                <input type="email" name="email" placeholder="Tu Email" id="email" required>
 
                 <label for="password">Password</label>
-                <input type="password" name="password" placeholder="Tu Password" id="password" require>
+                <input type="password" name="password" placeholder="Tu Password" id="password" required>
 
                 <input type="submit" value="Iniciar Sesión" class="boton boton-verde">
 

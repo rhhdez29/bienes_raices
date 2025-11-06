@@ -6,4 +6,4 @@
     //Destruir la sesión
     session_start();
     $_SESSION = [];
-    header('Location: /bienes_raices/index.php');
+    header('Location: ' . SITE_URL . '/index.php');

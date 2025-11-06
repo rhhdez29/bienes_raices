@@ -1,10 +1,10 @@
 <?php 
     
-    require '../../includes/funciones.php';
+    require_once '../../includes/funciones.php';
 
     $auth = estaAutenticado();
     if(!$auth) {
-        header('Location: /bienes_raices/login.php');
+        header('Location: ' . SITE_URL . '/login.php');
     }
     
     //Validar la URL por ID válido
@@ -62,7 +62,7 @@
     $creado = date('Y-m-d');
 
     //Asignar files hacia una variable
-    $imagen = $_FILES['imagen'];
+    $imagen = $_FILES['imagen'] ?? null;
 
         if(!$titulo){
             $errores[] = "Debes añadir un título";
@@ -88,11 +88,17 @@
             $errores[] = "Elige un vendedor";
         }
 
-        //Validar por tamaño (100 Kb máximo)
-        $medida = 1000 * 100;
-
-        if($imagen['size' > $medida] = ){
-            $errores[] = "La imagen es muy pesada";
+        // Validar imagen si se subió una
+        if($imagen && !empty($imagen['name'])){
+            $medida = 1000 * 100; // 100 KB
+            if(isset($imagen['size']) && $imagen['size'] > $medida){
+                $errores[] = "La imagen es muy pesada";
+            }
+            $info = getimagesize($imagen['tmp_name']);
+            $mime = $info['mime'] ?? '';
+            if(!in_array($mime, ['image/jpeg','image/png'])){
+                $errores[] = "El formato de la imagen no es válido (solo JPG/PNG)";
+            }
         }
 
         //echo "<pre>";
@@ -101,27 +107,30 @@
 
         //Revisar que el array este vacio
         if(empty($errores)){
-            //Crear carpeta
-            $carpetaImagenes = '../../imagenes/';
-            
-            //Subida de archivos
-
+            //Crear carpeta (ruta absoluta)
+            $carpetaImagenes = __DIR__ . '/../../imagenes/';
             if(!is_dir($carpetaImagenes)){
-                mkdir($carpetaImagenes);
+                mkdir($carpetaImagenes, 0755, true);
             }
 
-            $nombreImagen = '';
+            $nombreImagen = $propiedad['imagen'];
 
-            if($imagen['name']){
-                //Eliminar la imagen previa
-                    unlink($carpetaImagenes . $propiedad['imagen']);
-                //Generar un nombre unico
-                $nombreImagen = md5( uniqid( rand(), true ) ) . ".jpg";
+            if($imagen && !empty($imagen['name'])){
+                //Eliminar la imagen previa si existe
+                $rutaPrev = $carpetaImagenes . $propiedad['imagen'];
+                if(file_exists($rutaPrev) && is_file($rutaPrev)){
+                    unlink($rutaPrev);
+                }
+
+                //Generar un nombre unico conservando extension
+                $extension = ($mime === 'image/png') ? '.png' : '.jpg';
+                $nombreImagen = md5( uniqid( rand(), true ) ) . $extension;
 
                 //Subir imagen
-                move_uploaded_file($imagen['tmp_name'], $carpetaImagenes . $nombreImagen );
-            } else {
-                $nombreImagen = $propiedad['imagen'];
+                $rutaDestino = $carpetaImagenes . $nombreImagen;
+                if(!move_uploaded_file($imagen['tmp_name'], $rutaDestino)){
+                    $errores[] = "No se pudo subir la imagen";
+                }
             }
 
             
@@ -158,7 +167,7 @@
         </div>
         <?php endforeach; ?>
 
-        <form class="formulario" method="POST"  enctype="mulipart/form-data">
+                <form class="formulario" method="POST"  enctype="multipart/form-data">
             <fieldset>
                 <legend>Información General</legend>
 
@@ -197,15 +206,13 @@
                     <option value="">---Seleccione---</option>
                     <?php if($resultado): ?>
                         <?php while($vendedorDB = mysqli_fetch_assoc($resultado)): ?>
-                            <option <?php $vendedorId === $vendedor['Id'] ? 'select' : ''?>   value="<?php echo htmlspecialchars($vendedorDB['id']); ?>" <?php echo ($vendedor == $vendedorDB['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($vendedorDB['nombre'] . ' ' . ($vendedorDB['apellido'] ?? '')); ?></option>
+                            <option value="<?php echo htmlspecialchars($vendedorDB['id']); ?>" <?php echo ($vendedor == $vendedorDB['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($vendedorDB['nombre'] . ' ' . ($vendedorDB['apellido'] ?? '')); ?></option>
                         <?php endwhile; ?>
                     <?php endif; ?>
                 </select>
             </fieldset>
 
-            <input type="submit" value="Actualizar
-            .zas
-            " class="boton boton-verde">
+            <input type="submit" value="Actualizar" class="boton boton-verde">
         </form>
     </main>
 
